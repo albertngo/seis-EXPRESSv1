@@ -1,18 +1,35 @@
-version: "3.7"
+version: "3"
 services:
   postgresDB:
-    image: postgres
-    environment:
-      POSTGRES_PASSWORD: Thisisngo1995!
-      POSTGRES_USER: postgres
-      POSTGRES_DB: postgres
-    volumes:
-      - ./pgdata:/var/lib/postgresql/data
+    image: postgres:alpine
+    container_name: postgresDB
     ports:
       - "5432:5432"
+    environment:
+      - POSTGRES_DB=myDB
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=Thisisngo1995!
+
   express-server:
-    image: albertngo/express
+    build: ./server
+    environment:
+      - CONNECTION_STRING=postgresDB://postgres:Thisisngo1995!@postgresDB:5432/myDB
+      - DB_SERVER=postgresDB
+      - DB_HOST=postgresDB
+      - NODE_ENV=production
+    links:
+      - postgresDB
     depends_on:
       - postgresDB
     ports:
       - "3000:3000"
+
+  react-app:
+    build: ./client
+    ports:
+      - "80:80"
+    depends_on:
+      - express-server
+    environment:
+      - REACT_APP_API_URL=http://localhost:3000
+      - API_URL=http://localhost:3000
