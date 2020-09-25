@@ -1,8 +1,8 @@
 version: "3"
 services:
-  postgresDB:
+  postgresdb:
     image: postgres:alpine
-    container_name: postgresDB
+    container_name: postgresdb
     ports:
       - "5432:5432"
     environment:
@@ -12,24 +12,28 @@ services:
 
   express-server:
     build: ./server
+    container_name: express-server
+    image: seismvpv1.azurecr.io/express-server
     environment:
-      - CONNECTION_STRING=postgresDB://postgres:Thisisngo1995!@postgresDB:5432/myDB
-      - DB_SERVER=postgresDB
-      - DB_HOST=postgresDB
+      - CONNECTION_STRING=postgresdb://postgres:Thisisngo1995!@postgresdb:5432/myDB
+      - DB_SERVER=postgresdb
+      - DB_HOST=postgresdb
       - NODE_ENV=production
     links:
-      - postgresDB
+      - postgresdb
     depends_on:
-      - postgresDB
+      - postgresdb
     ports:
       - "3000:3000"
 
   react-app:
     build: ./client
+    image: seismvpv1.azurecr.io/react-app
+    container_name: reactApp
     ports:
       - "80:80"
     depends_on:
       - express-server
     environment:
-      - REACT_APP_API_URL=http://localhost:3000
-      - API_URL=http://localhost:3000
+      - REACT_APP_API_URL=http://localhost:4000
+      - API_URL=http://localhost:4000

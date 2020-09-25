@@ -1,4 +1,4 @@
-FROM node:12
+FROM node:current-slim as build
 
 WORKDIR /usr/src/app
 
@@ -8,6 +8,6 @@ RUN npm install
 
 COPY . . 
 
-EXPOSE 3000
+EXPOSE 4000
 
 CMD ["npm", "start"]
