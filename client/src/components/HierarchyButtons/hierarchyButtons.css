@@ -1,0 +1,37 @@
+.buttonContainer {
+  width: 90px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  /* background-color: red; */
+  margin-top: -5%;
+  margin-left: -20%;
+}
+
+.addSibling,
+.addChildren,
+.delete {
+  width: 25%;
+  cursor: pointer;
+  opacity: 0.2;
+}
+
+.addSibling:hover,
+.addChildren:hover {
+  opacity: 1;
+}
+
+.delete:hover {
+  opacity: 1;
+  fill: red;
+}
+
+.ag-cell-focus,
+.ag-cell-no-focus {
+  border: none !important;
+}
+
+.no-border.ag-cell:focus {
+  border: none !important;
+  outline: none;
+}

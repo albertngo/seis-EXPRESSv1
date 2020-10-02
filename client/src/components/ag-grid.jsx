@@ -3,7 +3,7 @@ import { AgGridReact } from "ag-grid-react";
 import "ag-grid-enterprise";
 import "ag-grid-community/dist/styles/ag-grid.css";
 import "ag-grid-community/dist/styles/ag-theme-alpine.css";
-import FirstColButtons from "./HierarchyButtons/firstColButtons";
+import FirstColButtons from "./HierarchyButtons/hierarchyButtons";
 // import InsMultiModal from "./HierarchyButtons/insMultiModal";
 
 class AgGrid extends Component {
@@ -153,8 +153,9 @@ class AgGrid extends Component {
           cellRenderer: "firstColButtons",
           editable: false,
           maxWidth: 100,
-
-          // suppressNavigable: true,
+          suppressCellSelection: true,
+          cellClass: "no-border",
+          suppressNavigable: true,
         },
         { field: "jobTitle" },
         { field: "employmentType" },
@@ -198,26 +199,27 @@ class AgGrid extends Component {
     onRowClicked: (event) => {
       let rowNode = event.node;
       rowNode.setSelected(true);
+      console.log(this.gridApi.getSelectedRows());
     },
 
     onRowDragMove: (event) => {
       setPotentialParentForNode(event);
     },
 
-    onRowDragEnd: (event) => {
-      let nodeHierarchy = event.node.data.orgHierarchy;
-      let newParentPath = potentialParent.data.orgHierarchy;
-      if (potentialParent) {
-        //get the last entry of the moved node
-        let lastEntry = [nodeHierarchy[nodeHierarchy.length - 1]];
-        //combine the arrays
-        let newPath = newParentPath.concat(lastEntry);
-        event.node.data.orgHierarchy = newPath;
-        console.log(event.node);
-        this.gridApi.applyTransaction({ update: [event.node.data] });
-        refreshRows(event.api, [event.node]);
-      }
-    },
+    // onRowDragEnd: (event) => {
+    //   let nodeHierarchy = event.node.data.orgHierarchy;
+    //   let newParentPath = potentialParent.data.orgHierarchy;
+    //   if (potentialParent) {
+    //     //get the last entry of the moved node
+    //     let lastEntry = [nodeHierarchy[nodeHierarchy.length - 1]];
+    //     //combine the arrays
+    //     let newPath = newParentPath.concat(lastEntry);
+    //     event.node.data.orgHierarchy = newPath;
+    //     console.log(event.node);
+    //     this.gridApi.applyTransaction({ update: [event.node.data] });
+    //     refreshRows(event.api, [event.node]);
+    //   }
+    // },
   };
 
   addNewRow = () => {};
