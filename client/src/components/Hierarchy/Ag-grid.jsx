@@ -3,14 +3,15 @@ import { AgGridReact } from "ag-grid-react";
 import "ag-grid-enterprise";
 import "ag-grid-community/dist/styles/ag-grid.css";
 import "ag-grid-community/dist/styles/ag-theme-alpine.css";
-import FirstColButtons from "./HierarchyButtons/hierarchyButtons";
-// import InsMultiModal from "./HierarchyButtons/insMultiModal";
-
+import HierarchyButtons from "../Buttons/HierarchyButtons";
+import Toolbar from "./Toolbar";
 class AgGrid extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
+      multiKey: false,
+      selectedNodes: "",
       rowData: [
         {
           orgHierarchy: ["JJ Rogers"],
@@ -150,7 +151,7 @@ class AgGrid extends Component {
       columnDefs: [
         {
           lockPosition: true,
-          cellRenderer: "firstColButtons",
+          cellRenderer: "hierarchyButtons",
           editable: false,
           maxWidth: 100,
           suppressCellSelection: true,
@@ -161,7 +162,7 @@ class AgGrid extends Component {
         { field: "employmentType" },
       ],
       frameworkComponents: {
-        firstColButtons: FirstColButtons,
+        hierarchyButtons: HierarchyButtons,
       },
       defaultColDef: {
         enableCellChangeFlash: true,
@@ -194,16 +195,30 @@ class AgGrid extends Component {
     this.gridApi = params.api;
     this.gridColumnApi = params.columnApi;
   };
+  componentWillMount() {
+    document.addEventListener("keydown", this.onKeyDown.bind(this));
+    document.addEventListener("keyup", this.onKeyUp.bind(this));
+  }
+
+  onKeyDown = (event) => {
+    if (event.key === "Shift" || event.key === "Control") {
+      this.setState({ multiKey: true });
+      console.log(this.state.multiKey);
+    }
+  };
+  onKeyUp = (event) => {
+    if (event.key === "Shift" || event.key === "Control") {
+      this.setState({ multiKey: false });
+      console.log(this.state.multiKey);
+    }
+  };
 
   gridOptions = {
     onRowClicked: (event) => {
       let rowNode = event.node;
-      rowNode.setSelected(true);
-      console.log(this.gridApi.getSelectedRows());
-    },
-
-    onRowDragMove: (event) => {
-      setPotentialParentForNode(event);
+      // rowNode.setSelected(true);
+      this.setState({ selectedNodes: this.gridApi.getSelectedNodes() });
+      console.log(this.state.selectedNodes);
     },
 
     // onRowDragEnd: (event) => {
@@ -233,6 +248,10 @@ class AgGrid extends Component {
           }}
           className="ag-theme-alpine"
         >
+          <Toolbar
+            selectedNodes={this.state.selectedNodes}
+            gridApi={this.gridApi}
+          />
           <AgGridReact
             //gridOptions THIS SET TAKES PRECEDENT COMPARED TO ABOVE
             getRowHeight={this.getRowHeight}
@@ -242,7 +261,7 @@ class AgGrid extends Component {
             autoGroupColumnDef={this.state.autoGroupColumnDef}
             treeData={true}
             filterable={true}
-            animateRows={true}
+            // animateRows={true} SLOWS DOWN CLOSING OF MODULE IF ANIMATION HAS TO RUN FIRST
             editable={true}
             rowDragManaged={true}
             enableMultiRowDragging={true}

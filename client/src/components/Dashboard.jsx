@@ -13,8 +13,8 @@ import Badge from "@material-ui/core/Badge";
 import MenuIcon from "@material-ui/icons/Menu";
 import ChevronLeftIcon from "@material-ui/icons/ChevronLeft";
 import NotificationsIcon from "@material-ui/icons/Notifications";
-import { mainListItems, secondaryListItems } from "./ListItems";
-import AgGrid from "./ag-grid";
+import { mainListItems, secondaryListItems } from "./Navigation/ListItems";
+import AgGrid from "./Hierarchy/Ag-grid";
 
 const drawerWidth = 240;
 
