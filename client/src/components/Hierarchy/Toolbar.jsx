@@ -10,6 +10,19 @@ export default function Toolbar(props) {
     confirmOpen(false);
   };
 
+  let checkDuplicateArr = (deleteNodes = [], node) => {
+    for (let deleteNode of deleteNodes) {
+      console.log(deleteNode.orgHierarchy);
+      console.log(node.orgHierarchy);
+      if (
+        JSON.stringify(deleteNode.orgHierarchy) ==
+        JSON.stringify(node.orgHierarchy)
+      )
+        return true;
+    }
+    return false;
+  };
+
   //--------------------------------DUPLICATE-----------------//
   let deleteHandler = () => {
     //check if there are any children, capture the node ID and store to remove them
@@ -17,15 +30,22 @@ export default function Toolbar(props) {
     let deleteNodes = [];
     //loop through all nodes, store and delete
     handleClose();
+    props.clearSaved();
     for (let outerNode of props.selectedNodes) {
+      console.log(`OUTERNODE`);
+      console.log(outerNode);
       for (let innerNode of outerNode.allLeafChildren) {
+        console.log(`INNNNNERRRRRRRRRRRRR`);
         console.log(innerNode);
-        deleteNodes.push(innerNode.data);
+        //check if node is already inside array
+        console.log(checkDuplicateArr(deleteNodes, innerNode.data));
+        if (!checkDuplicateArr(deleteNodes, innerNode.data))
+          deleteNodes.push(innerNode.data);
         console.log(deleteNodes);
-        props.gridApi.applyTransaction({
-          remove: deleteNodes,
-        });
       }
+      props.gridApi.applyTransaction({
+        remove: deleteNodes,
+      });
     }
   };
 
@@ -47,8 +67,8 @@ export default function Toolbar(props) {
         }}
         className="buttonClass"
         variant="contained"
-        color="Secondary"
-        disabled={!props.selectedNodes}
+        color="secondary"
+        // disabled={props.selectedNodes.length > 0 ? false : true}
       >
         Delete Selected
       </Button>

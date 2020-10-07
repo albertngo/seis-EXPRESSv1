@@ -11,7 +11,7 @@ class AgGrid extends Component {
 
     this.state = {
       multiKey: false,
-      selectedNodes: "",
+      selectedNodes: [],
       rowData: [
         {
           orgHierarchy: ["JJ Rogers"],
@@ -195,22 +195,29 @@ class AgGrid extends Component {
     this.gridApi = params.api;
     this.gridColumnApi = params.columnApi;
   };
-  componentWillMount() {
-    document.addEventListener("keydown", this.onKeyDown.bind(this));
-    document.addEventListener("keyup", this.onKeyUp.bind(this));
-  }
 
-  onKeyDown = (event) => {
-    if (event.key === "Shift" || event.key === "Control") {
-      this.setState({ multiKey: true });
-      console.log(this.state.multiKey);
-    }
-  };
-  onKeyUp = (event) => {
-    if (event.key === "Shift" || event.key === "Control") {
-      this.setState({ multiKey: false });
-      console.log(this.state.multiKey);
-    }
+  // componentWillMount() {
+  //   document.addEventListener("keydown", this.onKeyDown.bind(this));
+  //   document.addEventListener("keyup", this.onKeyUp.bind(this));
+  // }
+
+  // onKeyDown = (event) => {
+  //   if (event.key === "Shift" || event.key === "Control") {
+  //     this.setState({ multiKey: true });
+  //     console.log(this.state.multiKey);
+  //   }
+  // };
+  // onKeyUp = (event) => {
+  //   if (event.key === "Shift" || event.key === "Control") {
+  //     this.setState({ multiKey: false });
+  //     console.log(this.state.multiKey);
+  //   }
+  // };
+
+  clearSaved = () => {
+    // this.setState({ selectedNodes: [] });
+    // console.log(this.state.selectedNodes);
+    // console.log("CLEAREDDD");
   };
 
   gridOptions = {
@@ -251,6 +258,7 @@ class AgGrid extends Component {
           <Toolbar
             selectedNodes={this.state.selectedNodes}
             gridApi={this.gridApi}
+            clearSaved={this.clearSaved}
           />
           <AgGridReact
             //gridOptions THIS SET TAKES PRECEDENT COMPARED TO ABOVE
