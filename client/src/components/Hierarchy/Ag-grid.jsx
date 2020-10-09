@@ -1,4 +1,5 @@
 import React, { Component } from "react";
+import _ from "lodash";
 import { AgGridReact } from "ag-grid-react";
 import "ag-grid-enterprise";
 import "ag-grid-community/dist/styles/ag-grid.css";
@@ -17,17 +18,20 @@ class AgGrid extends Component {
           orgHierarchy: ["JJ Rogers"],
           jobTitle: "CEO",
           employmentType: "Permanent",
+          property: "Random",
         },
 
         {
           orgHierarchy: ["JJ Rogers", "Malcolm Barrett"],
           jobTitle: "Exec. Vice President",
           employmentType: "Permanent",
+          property: "Random",
         },
         {
           orgHierarchy: ["JJ Rogers", "Malcolm Barrett", "Esther Baker"],
           jobTitle: "Director of Operations",
           employmentType: "Permanent",
+          property: "Random",
         },
         {
           orgHierarchy: [
@@ -38,22 +42,26 @@ class AgGrid extends Component {
           ],
           jobTitle: "Fleet Coordinator",
           employmentType: "Permanent",
+          property: "Random",
         },
         {
           orgHierarchy: ["Erica Rogers"],
           jobTitle: "CEO",
           employmentType: "Permanent",
+          property: "Random",
         },
 
         {
           orgHierarchy: ["Erica Rogers", "Malcolm Barrett"],
           jobTitle: "Exec. Vice President",
           employmentType: "Permanent",
+          property: "Random",
         },
         {
           orgHierarchy: ["Erica Rogers", "Malcolm Barrett", "Esther Baker"],
           jobTitle: "Director of Operations",
           employmentType: "Permanent",
+          property: "Random",
         },
         {
           orgHierarchy: [
@@ -64,6 +72,7 @@ class AgGrid extends Component {
           ],
           jobTitle: "Fleet Coordinator",
           employmentType: "Permanent",
+          property: "Random",
         },
         {
           orgHierarchy: [
@@ -75,6 +84,7 @@ class AgGrid extends Component {
           ],
           jobTitle: "Parts Technician",
           employmentType: "Contract",
+          property: "Random",
         },
         {
           orgHierarchy: [
@@ -86,6 +96,7 @@ class AgGrid extends Component {
           ],
           jobTitle: "Service Technician",
           employmentType: "Contract",
+          property: "Random",
         },
         {
           orgHierarchy: [
@@ -96,6 +107,7 @@ class AgGrid extends Component {
           ],
           jobTitle: "Inventory Control",
           employmentType: "Permanent",
+          property: "Random",
         },
         {
           orgHierarchy: [
@@ -105,6 +117,7 @@ class AgGrid extends Component {
           ],
           jobTitle: "VP Sales",
           employmentType: "Permanent",
+          property: "Random",
         },
         {
           orgHierarchy: [
@@ -115,6 +128,7 @@ class AgGrid extends Component {
           ],
           jobTitle: "Sales Manager",
           employmentType: "Permanent",
+          property: "Random",
         },
         {
           orgHierarchy: [
@@ -126,6 +140,7 @@ class AgGrid extends Component {
           ],
           jobTitle: "Sales Executive",
           employmentType: "Contract",
+          property: "Random",
         },
         {
           orgHierarchy: [
@@ -136,6 +151,7 @@ class AgGrid extends Component {
           ],
           jobTitle: "Sales Executive",
           employmentType: "Contract",
+          property: "Random",
         },
         {
           orgHierarchy: [
@@ -146,6 +162,7 @@ class AgGrid extends Component {
           ],
           jobTitle: "Sales Executive",
           employmentType: "Permanent",
+          property: "Random",
         },
       ],
       columnDefs: [
@@ -154,12 +171,15 @@ class AgGrid extends Component {
           cellRenderer: "hierarchyButtons",
           editable: false,
           maxWidth: 100,
-          suppressCellSelection: true,
+          // suppressCellSelection: true,
           cellClass: "no-border",
-          suppressNavigable: true,
+          // suppressNavigable: true,
         },
         { field: "jobTitle" },
         { field: "employmentType" },
+        { field: "property" },
+        { field: "property" },
+        { field: "property" },
       ],
       frameworkComponents: {
         hierarchyButtons: HierarchyButtons,
@@ -222,11 +242,72 @@ class AgGrid extends Component {
 
   gridOptions = {
     onRowClicked: (event) => {
-      let rowNode = event.node;
-      // rowNode.setSelected(true);
       this.setState({ selectedNodes: this.gridApi.getSelectedNodes() });
       console.log(this.state.selectedNodes);
     },
+
+    onRowDragMove: (event) => {
+      //===========================================MOVEMENT================================================================//
+      //single or multiple
+      if (this.state.selectedNodes.length === 1) {
+        //check if the nodes are within the same parent (get the first parent)
+        // console.log(event.overNode.rowIndex);
+      } else {
+      }
+
+      //============================================================================//
+    },
+
+    onRowDragEnd: (event) => {
+      //===========================================MOVEMENT================================================================//
+      //single or multiple
+      if (this.state.selectedNodes.length === 1) {
+        if (event.overNode) {
+          if (event.node !== event.overNode) {
+            if (
+              compareParents(event.node.parent, event.overNode.parent) ||
+              event.node.parent === event.overNode
+            ) {
+              console.log(true);
+              let dragNode = { ...event.node };
+              dragNode.rowIndex = event.overNode.rowIndex + 1;
+              console.log("Transaction");
+              console.log(dragNode.rowIndex);
+              // event.api.applyTransaction([
+              //   (draggedNodes.data.employmentType = "CHANGED"),
+              // ]);
+            } else {
+              alert("invalid move: row is not within the original parent");
+            }
+          }
+        }
+      } else {
+        //check if EACH node is dropped into same parent
+        for (let node of this.state.selectedNodes) {
+          if (
+            node.parent !== event.overNode.parent &&
+            node.parent !== event.overNode
+          ) {
+            //alert invalid move
+            alert("SELECTED OUTSIDE OF PARENT AND CANNOT MOVE");
+            break;
+          }
+        }
+        for (let node of this.state.selectedNodes) {
+          console.log([node.rowIndex]);
+        }
+        let newIndex = changeIndex(
+          _.cloneDeep(this.state.selectedNodes),
+          event.overNode.rowIndex
+        );
+        console.log(newIndex);
+        event.api.applyTransaction({});
+      }
+
+      //============================================================================//
+    },
+
+    onRowDragLeave: (event) => {},
 
     // onRowDragEnd: (event) => {
     //   let nodeHierarchy = event.node.data.orgHierarchy;
@@ -269,9 +350,10 @@ class AgGrid extends Component {
             autoGroupColumnDef={this.state.autoGroupColumnDef}
             treeData={true}
             filterable={true}
-            // animateRows={true} SLOWS DOWN CLOSING OF MODULE IF ANIMATION HAS TO RUN FIRST
+            animateRows={true} //SLOWS DOWN CLOSING OF MODULE IF ANIMATION HAS TO RUN FIRST
             editable={true}
-            rowDragManaged={true}
+            // rowDragManaged={true}
+            sideBar={"columns"}
             enableMultiRowDragging={true}
             suppressMoveWhenRowDragging={true}
             groupDefaultExpanded={-1}
@@ -286,26 +368,31 @@ class AgGrid extends Component {
     );
   }
 }
-function setPotentialParentForNode({ api, node, overNode }) {
-  var newPotentialParent;
-  if (node === overNode) return;
-  else {
-    //set it as the new parent node
-    console.log("New Parent Selected");
-    newPotentialParent = overNode;
-    potentialParent = newPotentialParent;
-    console.log(potentialParent);
-  }
-}
-var potentialParent = null;
 
-function refreshRows(api, rowsToRefresh) {
-  var params = {
-    rowNodes: rowsToRefresh,
-    force: true,
-  };
-  api.refreshCells(params);
-  // api.redrawRows();
+function compareParents(dragParent, hoverParent) {
+  return dragParent === hoverParent ? true : false;
 }
+
+function changeIndex(selectedNodes, rowIndex) {
+  for (let node of selectedNodes) {
+    node.rowIndex = rowIndex + 1;
+    rowIndex++;
+  }
+  return selectedNodes;
+}
+// function setPotentialParentForNode({ api, node, overNode }) {
+//   var newPotentialParent;
+//   if (node === overNode) return;
+//   else {
+//     //set it as the new parent node
+//     console.log("New Parent Selected");
+//     newPotentialParent = overNode;
+//     potentialParent = newPotentialParent;
+//     console.log(potentialParent);
+//   }
+// }
+let potentialParent = null;
+let draggedNodes = null; //move to state?
+let hoveredNode = null; //move to state?
 
 export default AgGrid;
