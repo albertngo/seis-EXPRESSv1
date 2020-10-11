@@ -191,18 +191,14 @@ class AgGrid extends Component {
         resizable: true,
       },
       autoGroupColumnDef: {
-        valueSetter: function (params) {
-          console.log(params.data);
-          return true;
-        },
         headerName: "Organisation Hierarchy",
+        rowDragText: rowDragText,
         rowDrag: true,
-        // groupSelectsChildren: true,
-        // checkboxSelection: true,
         minWidth: 300,
         cellRendererParams: {
           suppressCount: true,
           suppressDoubleClickExpand: true,
+          checkbox: true,
         },
       },
       getDataPath: function (data) {
@@ -241,23 +237,40 @@ class AgGrid extends Component {
   };
 
   gridOptions = {
-    onRowClicked: (event) => {
-      this.setState({ selectedNodes: this.gridApi.getSelectedNodes() });
-      console.log(this.state.selectedNodes);
+    onRowDragEnter: (event) => {
+      for (let leafnode of event.node.allLeafChildren) {
+        leafnode.setSelected(true);
+        // console.log(leafnode.key);
+      }
     },
+    onRowSelected: (event) => {
+      let rowSelected = event.node.selected ? true : false;
 
+      //loop through all leaf nodes and select/de-select them
+      for (let leafnode of event.node.allLeafChildren) {
+        if (!rowSelected && leafnode.parent.selected) {
+          alert("Cannot de-select a row with it's parent selected");
+          leafnode.setSelected(true);
+          console.log("break");
+          break;
+        } else {
+          leafnode.setSelected(rowSelected);
+          // console.log(leafnode.key);
+        }
+      }
+      this.setState({ selectedNodes: this.gridApi.getSelectedNodes() });
+      // console.log(this.state.selectedNodes);
+    },
     onRowDragMove: (event) => {
       //===========================================MOVEMENT================================================================//
       //single or multiple
-      if (this.state.selectedNodes.length === 1) {
-        //check if the nodes are within the same parent (get the first parent)
-        // console.log(event.overNode.rowIndex);
-      } else {
-      }
+      console.log("MOVING");
 
       //============================================================================//
     },
-
+    onRowClicked: (event) => {
+      console.log(event.node);
+    },
     onRowDragEnd: (event) => {
       //===========================================MOVEMENT================================================================//
       //single or multiple
@@ -352,9 +365,9 @@ class AgGrid extends Component {
             filterable={true}
             animateRows={true} //SLOWS DOWN CLOSING OF MODULE IF ANIMATION HAS TO RUN FIRST
             editable={true}
-            // rowDragManaged={true}
             sideBar={"columns"}
             enableMultiRowDragging={true}
+            suppressRowClickSelection={true}
             suppressMoveWhenRowDragging={true}
             groupDefaultExpanded={-1}
             getDataPath={this.state.getDataPath}
@@ -380,6 +393,15 @@ function changeIndex(selectedNodes, rowIndex) {
   }
   return selectedNodes;
 }
+
+let rowDragText = (params) => {
+  if (params.rowNode.allLeafChildren.length > 1) {
+    return `Multiple Row(s)`;
+  }
+
+  return `${params.rowNode.key}`;
+  console.log(params);
+};
 // function setPotentialParentForNode({ api, node, overNode }) {
 //   var newPotentialParent;
 //   if (node === overNode) return;

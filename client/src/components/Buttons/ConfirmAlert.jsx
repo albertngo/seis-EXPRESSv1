@@ -17,7 +17,7 @@ export default function ConfirmAlert(props) {
       >
         <DialogTitle id="alert-dialog-title">{`Delete (${
           props.nodesToDelete.length ? props.nodesToDelete.length : 1
-        }) rows and their children?`}</DialogTitle>
+        }) rows?`}</DialogTitle>
         <DialogContent>
           <DialogContentText id="alert-dialog-description">
             The selected rows and their corresponding children will be deleted.

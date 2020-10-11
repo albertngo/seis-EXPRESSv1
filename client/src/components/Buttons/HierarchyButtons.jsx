@@ -48,6 +48,13 @@ export function HierarchyButtons(props) {
     let newNodeArr = createNewRowData(data, type);
     //create new row
     props.api.applyTransaction({ add: newNodeArr });
+    console.log(props);
+    let nodeToCheck = type == "sibling" ? props.node.parent : props.node;
+    if (nodeToCheck.selected) {
+      for (let leafnode of nodeToCheck.allLeafChildren) {
+        leafnode.setSelected(true);
+      }
+    }
   };
 
   //--------------------------------DUPLICATE-----------------//
