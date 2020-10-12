@@ -238,10 +238,11 @@ class AgGrid extends Component {
 
   gridOptions = {
     onRowDragEnter: (event) => {
-      for (let leafnode of event.node.allLeafChildren) {
-        leafnode.setSelected(true);
-        // console.log(leafnode.key);
-      }
+      event.node.setSelected(true);
+      // for (let leafnode of event.node.allLeafChildren) {
+      //   leafnode.setSelected(true);
+
+      // }
     },
     onRowSelected: (event) => {
       let rowSelected = event.node.selected ? true : false;
@@ -255,11 +256,9 @@ class AgGrid extends Component {
           break;
         } else {
           leafnode.setSelected(rowSelected);
-          // console.log(leafnode.key);
         }
       }
       this.setState({ selectedNodes: this.gridApi.getSelectedNodes() });
-      // console.log(this.state.selectedNodes);
     },
     onRowDragMove: (event) => {
       //===========================================MOVEMENT================================================================//
@@ -271,6 +270,7 @@ class AgGrid extends Component {
     onRowClicked: (event) => {
       console.log(event.node);
     },
+    
     onRowDragEnd: (event) => {
       //===========================================MOVEMENT================================================================//
       //single or multiple
@@ -282,15 +282,21 @@ class AgGrid extends Component {
               event.node.parent === event.overNode
             ) {
               console.log(true);
-              let dragNode = { ...event.node };
-              dragNode.rowIndex = event.overNode.rowIndex + 1;
-              console.log("Transaction");
-              console.log(dragNode.rowIndex);
-              // event.api.applyTransaction([
-              //   (draggedNodes.data.employmentType = "CHANGED"),
-              // ]);
+              var movingNode = event.node;
+              var overNode = event.overNode;
+              let movingData = movingNode.data;
+              let overData = overNode.data;
+              let fromIndex = this.state.rowData.indexOf(movingData);
+              let toIndex = this.state.rowData.indexOf(overData);
+              let newStore = this.state.rowData.slice();
+              moveInArray(newStore, fromIndex, toIndex);
+              event.api.setRowData(newStore);
+              //find the new id (same as overNodeid)
+              let newMovingNodeId = overNode.id;
+              movingNode = event.api.getRowNode(newMovingNodeId);
+              movingNode.setSelected(true);
             } else {
-              alert("invalid move: row is not within the original parent");
+              alert("INVALID MOVE: The row is not within the original parent");
             }
           }
         }
@@ -306,6 +312,7 @@ class AgGrid extends Component {
             break;
           }
         }
+
         for (let node of this.state.selectedNodes) {
           console.log([node.rowIndex]);
         }
@@ -314,7 +321,7 @@ class AgGrid extends Component {
           event.overNode.rowIndex
         );
         console.log(newIndex);
-        event.api.applyTransaction({});
+        event.api.refreshCells({ force: true });
       }
 
       //============================================================================//
@@ -393,7 +400,11 @@ function changeIndex(selectedNodes, rowIndex) {
   }
   return selectedNodes;
 }
-
+function moveInArray(arr, fromIndex, toIndex) {
+  var element = arr[fromIndex];
+  arr.splice(fromIndex, 1);
+  arr.splice(toIndex, 0, element);
+}
 let rowDragText = (params) => {
   if (params.rowNode.allLeafChildren.length > 1) {
     return `Multiple Row(s)`;
