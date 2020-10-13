@@ -1,5 +1,4 @@
 import React, { Component } from "react";
-import _ from "lodash";
 import { AgGridReact } from "ag-grid-react";
 import "ag-grid-enterprise";
 import "ag-grid-community/dist/styles/ag-grid.css";
@@ -82,12 +81,6 @@ class AgGrid extends Component {
   //     console.log(this.state.multiKey);
   //   }
   // };
-
-  clearSaved = () => {
-    // this.setState({ selectedNodes: [] });
-    // console.log(this.state.selectedNodes);
-    // console.log("CLEAREDDD");
-  };
 
   gridOptions = {
     onRowDragEnter: (event) => {
@@ -176,27 +169,54 @@ class AgGrid extends Component {
         }
         //==========Multiple=============//
       } else {
-        //check if EACH node is dropped into same parent
-        for (let node of this.state.selectedNodes) {
-          if (
-            node.parent !== event.overNode.parent &&
-            node.parent !== event.overNode
-          ) {
-            //alert invalid move
-            alert("SELECTED OUTSIDE OF PARENT AND CANNOT MOVE");
-            break;
-          }
-        }
+        let newStore = [];
+        //see if highestParents has mroe than one parent
+        if (this.state.highestParents.length) {
+          //grab current state of immutable store
 
-        for (let node of this.state.selectedNodes) {
-          console.log([node.rowIndex]);
+          event.api.forEachNode((node) => {
+            newStore.push(node);
+          });
         }
-        let newIndex = changeIndex(
-          _.cloneDeep(this.state.selectedNodes),
-          event.overNode.rowIndex
-        );
-        console.log(newIndex);
-        event.api.refreshCells({ force: true });
+        console.log(newStore);
+        this.state.highestParents.forEach((node) => {
+          newStore.splice(newStore.indexOf(node), 1);
+        });
+
+        this.state.highestParents.forEach((node) => {
+          if (event.overIndex === 0) {
+            newStore.splice(0, 0, node);
+          } else newStore.splice(event.overIndex + 1, 0, node);
+        });
+
+        newStore = newStore.map((node) => {
+          return node.data;
+        });
+
+        immutableStore = newStore;
+        console.log(newStore);
+        event.api.setRowData(newStore);
+        //check if EACH node is dropped into same parent
+        //   for (let node of this.state.selectedNodes) {
+        //     if (
+        //       node.parent !== event.overNode.parent &&
+        //       node.parent !== event.overNode
+        //     ) {
+        //       //alert invalid move
+        //       alert("SELECTED OUTSIDE OF PARENT AND CANNOT MOVE");
+        //       break;
+        //     }
+        //   }
+
+        //   for (let node of this.state.selectedNodes) {
+        //     console.log([node.rowIndex]);
+        //   }
+        //   let newIndex = changeIndex(
+        //     _.cloneDeep(this.state.selectedNodes),
+        //     event.overNode.rowIndex
+        //   );
+        //   console.log(newIndex);
+        //   event.api.refreshCells({ force: true });
       }
 
       //============================================================================//
@@ -233,7 +253,6 @@ class AgGrid extends Component {
             selectedNodes={this.state.selectedNodes}
             gridApi={this.gridApi}
             clearSaved={this.clearSaved}
-
           />
           <AgGridReact
             //gridOptions THIS SET TAKES PRECEDENT COMPARED TO ABOVE
@@ -270,13 +289,6 @@ function compareParents(dragParent, hoverParent) {
 function getRowNodeId(data) {
   return data.id;
 }
-function changeIndex(selectedNodes, rowIndex) {
-  for (let node of selectedNodes) {
-    node.rowIndex = rowIndex + 1;
-    rowIndex++;
-  }
-  return selectedNodes;
-}
 
 let rowDragText = (params) => {
   if (params.rowNode.allLeafChildren.length > 1) {
@@ -287,6 +299,12 @@ let rowDragText = (params) => {
 };
 
 let immutableStore = [
+  {
+    orgHierarchy: ["Erica Rogers"],
+    jobTitle: "CEO",
+    employmentType: "Permanent",
+    property: "Random",
+  },
   {
     orgHierarchy: ["JJ Rogers"],
     jobTitle: "CEO",
@@ -300,12 +318,7 @@ let immutableStore = [
     employmentType: "Permanent",
     property: "Random",
   },
-  {
-    orgHierarchy: ["JJ Rogers", "Malcolm Barrett", "Esther Baker"],
-    jobTitle: "Director of Operations",
-    employmentType: "Permanent",
-    property: "Random",
-  },
+
   {
     orgHierarchy: [
       "JJ Rogers",
@@ -317,13 +330,13 @@ let immutableStore = [
     employmentType: "Permanent",
     property: "Random",
   },
+
   {
-    orgHierarchy: ["Erica Rogers"],
-    jobTitle: "CEO",
+    orgHierarchy: ["JJ Rogers", "Malcolm Barrett", "Esther Baker"],
+    jobTitle: "Director of Operations",
     employmentType: "Permanent",
     property: "Random",
   },
-
   {
     orgHierarchy: ["Erica Rogers", "Malcolm Barrett"],
     jobTitle: "Exec. Vice President",
