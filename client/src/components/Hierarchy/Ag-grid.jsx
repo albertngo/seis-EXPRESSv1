@@ -13,158 +13,6 @@ class AgGrid extends Component {
     this.state = {
       multiKey: false,
       selectedNodes: [],
-      rowData: [
-        {
-          orgHierarchy: ["JJ Rogers"],
-          jobTitle: "CEO",
-          employmentType: "Permanent",
-          property: "Random",
-        },
-
-        {
-          orgHierarchy: ["JJ Rogers", "Malcolm Barrett"],
-          jobTitle: "Exec. Vice President",
-          employmentType: "Permanent",
-          property: "Random",
-        },
-        {
-          orgHierarchy: ["JJ Rogers", "Malcolm Barrett", "Esther Baker"],
-          jobTitle: "Director of Operations",
-          employmentType: "Permanent",
-          property: "Random",
-        },
-        {
-          orgHierarchy: [
-            "JJ Rogers",
-            "Malcolm Barrett",
-            "Esther Baker",
-            "Brittany Hanson",
-          ],
-          jobTitle: "Fleet Coordinator",
-          employmentType: "Permanent",
-          property: "Random",
-        },
-        {
-          orgHierarchy: ["Erica Rogers"],
-          jobTitle: "CEO",
-          employmentType: "Permanent",
-          property: "Random",
-        },
-
-        {
-          orgHierarchy: ["Erica Rogers", "Malcolm Barrett"],
-          jobTitle: "Exec. Vice President",
-          employmentType: "Permanent",
-          property: "Random",
-        },
-        {
-          orgHierarchy: ["Erica Rogers", "Malcolm Barrett", "Esther Baker"],
-          jobTitle: "Director of Operations",
-          employmentType: "Permanent",
-          property: "Random",
-        },
-        {
-          orgHierarchy: [
-            "Erica Rogers",
-            "Malcolm Barrett",
-            "Esther Baker",
-            "Brittany Hanson",
-          ],
-          jobTitle: "Fleet Coordinator",
-          employmentType: "Permanent",
-          property: "Random",
-        },
-        {
-          orgHierarchy: [
-            "Erica Rogers",
-            "Malcolm Barrett",
-            "Esther Baker",
-            "Brittany Hanson",
-            "Leah Flowers",
-          ],
-          jobTitle: "Parts Technician",
-          employmentType: "Contract",
-          property: "Random",
-        },
-        {
-          orgHierarchy: [
-            "Erica Rogers",
-            "Malcolm Barrett",
-            "Esther Baker",
-            "Brittany Hanson",
-            "Tammy Sutton",
-          ],
-          jobTitle: "Service Technician",
-          employmentType: "Contract",
-          property: "Random",
-        },
-        {
-          orgHierarchy: [
-            "Erica Rogers",
-            "Malcolm Barrett",
-            "Esther Baker",
-            "Derek Paul",
-          ],
-          jobTitle: "Inventory Control",
-          employmentType: "Permanent",
-          property: "Random",
-        },
-        {
-          orgHierarchy: [
-            "Erica Rogers",
-            "Malcolm Barrett",
-            "Francis Strickland",
-          ],
-          jobTitle: "VP Sales",
-          employmentType: "Permanent",
-          property: "Random",
-        },
-        {
-          orgHierarchy: [
-            "Erica Rogers",
-            "Malcolm Barrett",
-            "Francis Strickland",
-            "Morris Hanson",
-          ],
-          jobTitle: "Sales Manager",
-          employmentType: "Permanent",
-          property: "Random",
-        },
-        {
-          orgHierarchy: [
-            "Erica Rogers",
-
-            "Malcolm Barrett",
-            "Francis Strickland",
-            "Todd Tyler",
-          ],
-          jobTitle: "Sales Executive",
-          employmentType: "Contract",
-          property: "Random",
-        },
-        {
-          orgHierarchy: [
-            "Erica Rogers",
-            "Malcolm Barrett",
-            "Francis Strickland",
-            "Bennie Wise",
-          ],
-          jobTitle: "Sales Executive",
-          employmentType: "Contract",
-          property: "Random",
-        },
-        {
-          orgHierarchy: [
-            "Erica Rogers",
-            "Malcolm Barrett",
-            "Francis Strickland",
-            "Joel Cooper",
-          ],
-          jobTitle: "Sales Executive",
-          employmentType: "Permanent",
-          property: "Random",
-        },
-      ],
       columnDefs: [
         {
           lockPosition: true,
@@ -210,6 +58,10 @@ class AgGrid extends Component {
   onGridReady = (params) => {
     this.gridApi = params.api;
     this.gridColumnApi = params.columnApi;
+    immutableStore.forEach(function (data, index) {
+      data.id = index;
+    });
+    this.gridApi.setRowData(immutableStore);
   };
 
   // componentWillMount() {
@@ -238,6 +90,7 @@ class AgGrid extends Component {
 
   gridOptions = {
     onRowDragEnter: (event) => {
+      console.log("Selecting Nodes");
       event.node.setSelected(true);
       // for (let leafnode of event.node.allLeafChildren) {
       //   leafnode.setSelected(true);
@@ -270,7 +123,7 @@ class AgGrid extends Component {
     onRowClicked: (event) => {
       console.log(event.node);
     },
-    
+
     onRowDragEnd: (event) => {
       //===========================================MOVEMENT================================================================//
       //single or multiple
@@ -284,17 +137,30 @@ class AgGrid extends Component {
               console.log(true);
               var movingNode = event.node;
               var overNode = event.overNode;
-              let movingData = movingNode.data;
-              let overData = overNode.data;
-              let fromIndex = this.state.rowData.indexOf(movingData);
-              let toIndex = this.state.rowData.indexOf(overData);
-              let newStore = this.state.rowData.slice();
-              moveInArray(newStore, fromIndex, toIndex);
-              event.api.setRowData(newStore);
-              //find the new id (same as overNodeid)
-              let newMovingNodeId = overNode.id;
-              movingNode = event.api.getRowNode(newMovingNodeId);
-              movingNode.setSelected(true);
+
+              var rowNeedsToMove = movingNode !== overNode;
+
+              if (rowNeedsToMove) {
+                // the list of rows we have is data, not row nodes, so extract the data
+                var movingData = movingNode.data;
+                var overData = overNode.data;
+
+                var fromIndex = immutableStore.indexOf(movingData);
+                var toIndex = immutableStore.indexOf(overData);
+
+                var newStore = immutableStore.slice();
+                moveInArray(newStore, fromIndex, toIndex);
+
+                immutableStore = newStore;
+                event.api.setRowData(newStore);
+
+                // event.api.clearFocusedCell();
+                function moveInArray(arr, fromIndex, toIndex) {
+                  var element = arr[fromIndex];
+                  arr.splice(fromIndex, 1);
+                  arr.splice(toIndex, 0, element);
+                }
+              }
             } else {
               alert("INVALID MOVE: The row is not within the original parent");
             }
@@ -326,8 +192,6 @@ class AgGrid extends Component {
 
       //============================================================================//
     },
-
-    onRowDragLeave: (event) => {},
 
     // onRowDragEnd: (event) => {
     //   let nodeHierarchy = event.node.data.orgHierarchy;
@@ -364,7 +228,6 @@ class AgGrid extends Component {
           <AgGridReact
             //gridOptions THIS SET TAKES PRECEDENT COMPARED TO ABOVE
             getRowHeight={this.getRowHeight}
-            rowData={this.state.rowData}
             columnDefs={this.state.columnDefs}
             defaultColDef={this.state.defaultColDef}
             autoGroupColumnDef={this.state.autoGroupColumnDef}
@@ -375,12 +238,14 @@ class AgGrid extends Component {
             sideBar={"columns"}
             enableMultiRowDragging={true}
             suppressRowClickSelection={true}
-            suppressMoveWhenRowDragging={true}
+            // suppressMoveWhenRowDragging={true}
             groupDefaultExpanded={-1}
             getDataPath={this.state.getDataPath}
             onGridReady={this.onGridReady}
             gridOptions={this.gridOptions}
             rowSelection={"multiple"}
+            immutableData={true}
+            getRowNodeId={getRowNodeId}
             frameworkComponents={this.state.frameworkComponents}
           />
         </div>
@@ -392,7 +257,9 @@ class AgGrid extends Component {
 function compareParents(dragParent, hoverParent) {
   return dragParent === hoverParent ? true : false;
 }
-
+function getRowNodeId(data) {
+  return data.id;
+}
 function changeIndex(selectedNodes, rowIndex) {
   for (let node of selectedNodes) {
     node.rowIndex = rowIndex + 1;
@@ -400,11 +267,7 @@ function changeIndex(selectedNodes, rowIndex) {
   }
   return selectedNodes;
 }
-function moveInArray(arr, fromIndex, toIndex) {
-  var element = arr[fromIndex];
-  arr.splice(fromIndex, 1);
-  arr.splice(toIndex, 0, element);
-}
+
 let rowDragText = (params) => {
   if (params.rowNode.allLeafChildren.length > 1) {
     return `Multiple Row(s)`;
@@ -413,6 +276,156 @@ let rowDragText = (params) => {
   return `${params.rowNode.key}`;
   console.log(params);
 };
+
+let immutableStore = [
+  {
+    orgHierarchy: ["JJ Rogers"],
+    jobTitle: "CEO",
+    employmentType: "Permanent",
+    property: "Random",
+  },
+
+  {
+    orgHierarchy: ["JJ Rogers", "Malcolm Barrett"],
+    jobTitle: "Exec. Vice President",
+    employmentType: "Permanent",
+    property: "Random",
+  },
+  {
+    orgHierarchy: ["JJ Rogers", "Malcolm Barrett", "Esther Baker"],
+    jobTitle: "Director of Operations",
+    employmentType: "Permanent",
+    property: "Random",
+  },
+  {
+    orgHierarchy: [
+      "JJ Rogers",
+      "Malcolm Barrett",
+      "Esther Baker",
+      "Brittany Hanson",
+    ],
+    jobTitle: "Fleet Coordinator",
+    employmentType: "Permanent",
+    property: "Random",
+  },
+  {
+    orgHierarchy: ["Erica Rogers"],
+    jobTitle: "CEO",
+    employmentType: "Permanent",
+    property: "Random",
+  },
+
+  {
+    orgHierarchy: ["Erica Rogers", "Malcolm Barrett"],
+    jobTitle: "Exec. Vice President",
+    employmentType: "Permanent",
+    property: "Random",
+  },
+  {
+    orgHierarchy: ["Erica Rogers", "Malcolm Barrett", "Esther Baker"],
+    jobTitle: "Director of Operations",
+    employmentType: "Permanent",
+    property: "Random",
+  },
+  {
+    orgHierarchy: [
+      "Erica Rogers",
+      "Malcolm Barrett",
+      "Esther Baker",
+      "Brittany Hanson",
+    ],
+    jobTitle: "Fleet Coordinator",
+    employmentType: "Permanent",
+    property: "Random",
+  },
+  {
+    orgHierarchy: [
+      "Erica Rogers",
+      "Malcolm Barrett",
+      "Esther Baker",
+      "Brittany Hanson",
+      "Leah Flowers",
+    ],
+    jobTitle: "Parts Technician",
+    employmentType: "Contract",
+    property: "Random",
+  },
+  {
+    orgHierarchy: [
+      "Erica Rogers",
+      "Malcolm Barrett",
+      "Esther Baker",
+      "Brittany Hanson",
+      "Tammy Sutton",
+    ],
+    jobTitle: "Service Technician",
+    employmentType: "Contract",
+    property: "Random",
+  },
+  {
+    orgHierarchy: [
+      "Erica Rogers",
+      "Malcolm Barrett",
+      "Esther Baker",
+      "Derek Paul",
+    ],
+    jobTitle: "Inventory Control",
+    employmentType: "Permanent",
+    property: "Random",
+  },
+  {
+    orgHierarchy: ["Erica Rogers", "Malcolm Barrett", "Francis Strickland"],
+    jobTitle: "VP Sales",
+    employmentType: "Permanent",
+    property: "Random",
+  },
+  {
+    orgHierarchy: [
+      "Erica Rogers",
+      "Malcolm Barrett",
+      "Francis Strickland",
+      "Morris Hanson",
+    ],
+    jobTitle: "Sales Manager",
+    employmentType: "Permanent",
+    property: "Random",
+  },
+  {
+    orgHierarchy: [
+      "Erica Rogers",
+
+      "Malcolm Barrett",
+      "Francis Strickland",
+      "Todd Tyler",
+    ],
+    jobTitle: "Sales Executive",
+    employmentType: "Contract",
+    property: "Random",
+  },
+  {
+    orgHierarchy: [
+      "Erica Rogers",
+      "Malcolm Barrett",
+      "Francis Strickland",
+      "Bennie Wise",
+    ],
+    jobTitle: "Sales Executive",
+    employmentType: "Contract",
+    property: "Random",
+  },
+  {
+    orgHierarchy: [
+      "Erica Rogers",
+      "Malcolm Barrett",
+      "Francis Strickland",
+      "Joel Cooper",
+    ],
+    jobTitle: "Sales Executive",
+    employmentType: "Permanent",
+    property: "Random",
+  },
+];
+
 // function setPotentialParentForNode({ api, node, overNode }) {
 //   var newPotentialParent;
 //   if (node === overNode) return;
