@@ -15,7 +15,7 @@ export default function Toolbar(props) {
       console.log(deleteNode.orgHierarchy);
       console.log(node.orgHierarchy);
       if (
-        JSON.stringify(deleteNode.orgHierarchy) ==
+        JSON.stringify(deleteNode.orgHierarchy) ===
         JSON.stringify(node.orgHierarchy)
       )
         return true;
@@ -23,30 +23,32 @@ export default function Toolbar(props) {
     return false;
   };
 
+  let toOpenHandler = () => {
+    if (props.selectedNodes.length) {
+      confirmOpen(true);
+    }
+  };
   //--------------------------------DUPLICATE-----------------//
   let deleteHandler = () => {
     //check if there are any children, capture the node ID and store to remove them
 
-    let deleteNodes = [];
     //loop through all nodes, store and delete
     handleClose();
-    props.clearSaved();
-    for (let outerNode of props.selectedNodes) {
-      console.log(`OUTERNODE`);
-      console.log(outerNode);
-      for (let innerNode of outerNode.allLeafChildren) {
-        console.log(`INNNNNERRRRRRRRRRRRR`);
-        console.log(innerNode);
-        //check if node is already inside array
-        console.log(checkDuplicateArr(deleteNodes, innerNode.data));
-        if (!checkDuplicateArr(deleteNodes, innerNode.data))
-          deleteNodes.push(innerNode.data);
-        console.log(deleteNodes);
-      }
-      props.gridApi.applyTransaction({
-        remove: deleteNodes,
-      });
-    }
+
+    let newStore = [];
+    props.gridApi.forEachNode((node) => {
+      newStore.push(node);
+    });
+
+    console.log(newStore);
+    //remove the nodes to delete
+    props.selectedNodes.forEach((node) => {
+      newStore.splice(newStore.indexOf(node), 1);
+    });
+    newStore = newStore.map((node) => {
+      return node.data;
+    });
+    props.gridApi.setRowData(newStore);
   };
 
   //-------------------------------------------------//
@@ -63,7 +65,7 @@ export default function Toolbar(props) {
       </Button> */}
       <Button
         onClick={() => {
-          confirmOpen(true);
+          toOpenHandler();
         }}
         className="buttonClass"
         variant="contained"

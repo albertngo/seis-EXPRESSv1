@@ -13,6 +13,7 @@ class AgGrid extends Component {
     this.state = {
       multiKey: false,
       selectedNodes: [],
+      highestParents: [],
       columnDefs: [
         {
           lockPosition: true,
@@ -92,10 +93,6 @@ class AgGrid extends Component {
     onRowDragEnter: (event) => {
       console.log("Selecting Nodes");
       event.node.setSelected(true);
-      // for (let leafnode of event.node.allLeafChildren) {
-      //   leafnode.setSelected(true);
-
-      // }
     },
     onRowSelected: (event) => {
       let rowSelected = event.node.selected ? true : false;
@@ -112,6 +109,17 @@ class AgGrid extends Component {
         }
       }
       this.setState({ selectedNodes: this.gridApi.getSelectedNodes() });
+      //filter the selectedNodes to ONLY highest level parent
+      let highestParents = [...this.state.selectedNodes];
+      //loop through highestParents, if parent within selectedNodes, remove from arr
+      this.state.selectedNodes.forEach((node) => {
+        let foundIndex = this.state.selectedNodes.indexOf(node.parent);
+        if (foundIndex > -1) {
+          highestParents.splice(highestParents.indexOf(node), 1);
+        }
+      });
+      this.setState({ highestParents: highestParents });
+      console.log(`highestParents`, this.state.highestParents);
     },
     onRowDragMove: (event) => {
       //===========================================MOVEMENT================================================================//
@@ -129,43 +137,44 @@ class AgGrid extends Component {
       //single or multiple
       if (this.state.selectedNodes.length === 1) {
         if (event.overNode) {
-          if (event.node !== event.overNode) {
-            if (
-              compareParents(event.node.parent, event.overNode.parent) ||
-              event.node.parent === event.overNode
-            ) {
-              console.log(true);
-              var movingNode = event.node;
-              var overNode = event.overNode;
+          //check if the node is dropped within the same parent
+          if (
+            compareParents(event.node.parent, event.overNode.parent) ||
+            event.node.parent === event.overNode
+          ) {
+            console.log(
+              "This single node has been dropped within the same parent!"
+            );
+            let movingNode = event.node;
+            let overNode = event.overNode;
 
-              var rowNeedsToMove = movingNode !== overNode;
+            let rowNeedsToMove = movingNode !== overNode;
 
-              if (rowNeedsToMove) {
-                // the list of rows we have is data, not row nodes, so extract the data
-                var movingData = movingNode.data;
-                var overData = overNode.data;
+            if (rowNeedsToMove) {
+              // the list of rows we have is data, not row nodes, so extract the data
+              let movingData = movingNode.data;
+              let overData = overNode.data;
 
-                var fromIndex = immutableStore.indexOf(movingData);
-                var toIndex = immutableStore.indexOf(overData);
+              let fromIndex = immutableStore.indexOf(movingData);
+              let toIndex = immutableStore.indexOf(overData);
 
-                var newStore = immutableStore.slice();
-                moveInArray(newStore, fromIndex, toIndex);
+              let newStore = immutableStore.slice();
+              moveInArray(newStore, fromIndex, toIndex);
 
-                immutableStore = newStore;
-                event.api.setRowData(newStore);
+              immutableStore = newStore;
+              event.api.setRowData(newStore);
 
-                // event.api.clearFocusedCell();
-                function moveInArray(arr, fromIndex, toIndex) {
-                  var element = arr[fromIndex];
-                  arr.splice(fromIndex, 1);
-                  arr.splice(toIndex, 0, element);
-                }
+              function moveInArray(arr, fromIndex, toIndex) {
+                let element = arr[fromIndex];
+                arr.splice(fromIndex, 1);
+                arr.splice(toIndex, 0, element);
               }
-            } else {
-              alert("INVALID MOVE: The row is not within the original parent");
             }
+          } else {
+            alert("INVALID MOVE: The row is not within the original parent");
           }
         }
+        //==========Multiple=============//
       } else {
         //check if EACH node is dropped into same parent
         for (let node of this.state.selectedNodes) {
@@ -224,6 +233,7 @@ class AgGrid extends Component {
             selectedNodes={this.state.selectedNodes}
             gridApi={this.gridApi}
             clearSaved={this.clearSaved}
+
           />
           <AgGridReact
             //gridOptions THIS SET TAKES PRECEDENT COMPARED TO ABOVE
@@ -274,7 +284,6 @@ let rowDragText = (params) => {
   }
 
   return `${params.rowNode.key}`;
-  console.log(params);
 };
 
 let immutableStore = [
@@ -427,7 +436,7 @@ let immutableStore = [
 ];
 
 // function setPotentialParentForNode({ api, node, overNode }) {
-//   var newPotentialParent;
+//   let newPotentialParent;
 //   if (node === overNode) return;
 //   else {
 //     //set it as the new parent node

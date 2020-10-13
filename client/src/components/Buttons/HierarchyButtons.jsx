@@ -23,6 +23,7 @@ function createNewRowData({ orgHierarchy }, type, numEntries = 1) {
       }
     }
     let newData = {
+      id: new Date().getUTCMilliseconds(),
       jobTitle: "",
       employmentType: "",
       orgHierarchy: newOrg,
@@ -49,9 +50,10 @@ export function HierarchyButtons(props) {
     //create new row
     props.api.applyTransaction({ add: newNodeArr });
     console.log(props);
-    let nodeToCheck = type == "sibling" ? props.node.parent : props.node;
+    let nodeToCheck = type === "sibling" ? props.node.parent : props.node;
     if (nodeToCheck.selected) {
       for (let leafnode of nodeToCheck.allLeafChildren) {
+        console.log(leafnode.id);
         leafnode.setSelected(true);
       }
     }
@@ -63,12 +65,24 @@ export function HierarchyButtons(props) {
     handleClose();
     let deleteNodes = [];
     for (let node of props.node.allLeafChildren) {
-      deleteNodes.push(node.data);
+      deleteNodes.push(node);
     }
-    console.log(props.node.allLeafChildren);
-    props.api.applyTransaction({
-      remove: deleteNodes,
+
+    let newStore = [];
+
+    props.api.forEachNode((node) => {
+      newStore.push(node);
     });
+
+    console.log(newStore);
+    //remove the nodes to delete
+    deleteNodes.forEach((node) => {
+      newStore.splice(newStore.indexOf(node), 1);
+    });
+    newStore = newStore.map((node) => {
+      return node.data;
+    });
+    props.api.setRowData(newStore);
   };
 
   //-------------------------------------------------//
