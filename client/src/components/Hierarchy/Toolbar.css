@@ -1,7 +1,9 @@
 .toolbar {
   margin: 2em 2em;
+  display: flex;
 }
 
 .buttonClass {
-  margin: 2em 2em;
+  margin: 0 1em !important;
+
 }

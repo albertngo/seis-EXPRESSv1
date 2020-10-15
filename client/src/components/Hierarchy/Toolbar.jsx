@@ -10,18 +10,6 @@ export default function Toolbar(props) {
     confirmOpen(false);
   };
 
-  let checkDuplicateArr = (deleteNodes = [], node) => {
-    for (let deleteNode of deleteNodes) {
-      console.log(deleteNode.orgHierarchy);
-      console.log(node.orgHierarchy);
-      if (
-        JSON.stringify(deleteNode.orgHierarchy) ===
-        JSON.stringify(node.orgHierarchy)
-      )
-        return true;
-    }
-    return false;
-  };
 
   let toOpenHandler = () => {
     if (props.selectedNodes.length) {
@@ -61,7 +49,7 @@ export default function Toolbar(props) {
         nodesToDelete={props.selectedNodes}
       />
       {/* <Button className="buttonClass" variant="contained" color="Default">
-        Recovery module
+        Making Child
       </Button> */}
       <Button
         onClick={() => {
@@ -70,7 +58,7 @@ export default function Toolbar(props) {
         className="buttonClass"
         variant="contained"
         color="secondary"
-        // disabled={props.selectedNodes.length > 0 ? false : true}
+        disabled={props.selectedNodes.length > 0 ? false : true}
       >
         Delete Selected
       </Button>
