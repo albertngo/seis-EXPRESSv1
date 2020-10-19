@@ -1,11 +1,13 @@
 import React, { Component } from "react";
 import _ from "lodash";
+import "./Ag-grid.css";
 import { AgGridReact } from "ag-grid-react";
 import "ag-grid-enterprise";
 import "ag-grid-community/dist/styles/ag-grid.css";
 import "ag-grid-community/dist/styles/ag-theme-alpine.css";
 import HierarchyButtons from "../Buttons/HierarchyButtons";
 import Toolbar from "./Toolbar";
+
 class AgGrid extends Component {
   constructor(props) {
     super(props);
@@ -34,7 +36,7 @@ class AgGrid extends Component {
         hierarchyButtons: HierarchyButtons,
       },
       defaultColDef: {
-        enableCellChangeFlash: true,
+        cellClassRules: this.gridOptions.cellClassRules,
         flex: 1,
         editable: true,
         resizable: true,
@@ -48,6 +50,7 @@ class AgGrid extends Component {
           suppressDoubleClickExpand: true,
           checkbox: true,
         },
+        cellClassRules: this.gridOptions.cellClassRules,
       },
       getDataPath: function (data) {
         return data.orgHierarchy;
@@ -83,8 +86,39 @@ class AgGrid extends Component {
       console.log("Make Into Child:", this.state.makeChild);
     }
   };
+  setPotentialParentForNode = (api, node, overNode) => {
+    var newPotentialParent;
+    if (overNode && this.state.selectedNodes.indexOf(overNode) === -1) {
+      newPotentialParent = overNode;
+    } else {
+      newPotentialParent = null;
+    }
 
+    var alreadySelected = potentialParent === newPotentialParent;
+    if (alreadySelected) {
+      return;
+    }
+
+    // we refresh the previous selection (if it exists) to clear
+    // the highlighted and then the new selection.
+    var rowsToRefresh = [];
+    if (potentialParent) {
+      rowsToRefresh.push(potentialParent);
+    }
+    if (newPotentialParent) {
+      rowsToRefresh.push(newPotentialParent);
+    }
+
+    potentialParent = newPotentialParent;
+
+    refreshRows(api, rowsToRefresh);
+  };
   gridOptions = {
+    cellClassRules: {
+      "hover-over": function (params) {
+        return params.node === potentialParent;
+      },
+    },
     rowDragText: (params) => {
       if (this.state.makeChild) {
         return `Make Child of....`;
@@ -127,7 +161,9 @@ class AgGrid extends Component {
       this.setState({ highestParents: highestParents });
       console.log(`highestParents`, this.state.highestParents);
     },
-    onRowDragMove: (event) => {},
+    onRowDragMove: (event) => {
+      this.setPotentialParentForNode(event.api, event.node, event.overNode);
+    },
 
     onRowClicked: (event) => {
       console.log(event.node);
@@ -260,7 +296,12 @@ class AgGrid extends Component {
           }
         }
       }
-
+      potentialParent = null;
+      event.api.refreshCells({
+        force: true,
+        suppressFlash: true,
+        rowNodes: [event.overNode],
+      });
       //============================================================================//
     },
 
@@ -344,17 +385,20 @@ function findLevel(node) {
   }
   return level;
 }
-// function setPotentialParentForNode({ api, node, overNode }) {
-//   let newPotentialParent;
-//   if (node === overNode) return;
-//   else {
-//     //set it as the new parent node
-//     console.log("New Parent Selected");
-//     newPotentialParent = overNode;
-//     potentialParent = newPotentialParent;
-//     console.log(potentialParent);
-//   }
-// }
+
+function refreshRows(api, rowsToRefresh) {
+  var params = {
+    // refresh these rows only.
+    rowNodes: rowsToRefresh,
+    suppressFlash: true,
+    // because the grid does change detection, the refresh
+    // will not happen because the underlying value has not
+    // changed. to get around this, we force the refresh,
+    // which skips change detection.
+    force: true,
+  };
+  api.refreshCells(params);
+}
 
 function compareParents(dragParent, hoverParent) {
   return dragParent === hoverParent ? true : false;
